@@ -1,10 +1,6 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
+﻿using System.Collections;
 using UnityEditor;
 using UnityEngine;
-using System.Collections;
-using Object = UnityEngine.Object;
 
 public class AddParent : ScriptableObject
 {
@@ -41,7 +37,7 @@ public class AddParent : ScriptableObject
                     newParent.transform.parent = originalParent;
             }
             Selection.objects = new GameObject[] { newParent };
-        }        
+        }
     }
 
     static private Vector3 FindThePivot(Transform[] trans)
@@ -101,48 +97,20 @@ public class InspectorLock : ScriptableObject
     [MenuItem("Window/Toggle Inspector Lock %_L", false, 2102)]
     static void LockToggle()
     {
-        if (selectedWindow == null)
-        {
-            if (!EditorPrefs.HasKey("LockableInspectorIndex"))
-                EditorPrefs.SetInt("LockableInspectorIndex", 0);
-            int i = EditorPrefs.GetInt("LockableInspectorIndex");
-
-            Type type = Assembly.GetAssembly(typeof(Editor)).GetType("UnityEditor.InspectorWindow");
-            Object[] findObjectsOfTypeAll = Resources.FindObjectsOfTypeAll(type);
-            selectedWindow = (EditorWindow)findObjectsOfTypeAll[i];
-        }
-
-        if (selectedWindow != null && selectedWindow.GetType().Name == "InspectorWindow")
-        {
-            Type type = Assembly.GetAssembly(typeof(Editor)).GetType("UnityEditor.InspectorWindow");
-            PropertyInfo propertyInfo = type.GetProperty("isLocked");
-            bool value = (bool)propertyInfo.GetValue(selectedWindow, null);
-            propertyInfo.SetValue(selectedWindow, !value, null);
-            selectedWindow.Repaint();
-        }
+        ActiveEditorTracker.sharedTracker.isLocked = !ActiveEditorTracker.sharedTracker.isLocked;
+        ActiveEditorTracker.sharedTracker.ForceRebuild();
     }
 
     [MenuItem("Window/Refresh Inspector Lock %#_L", false, 2102)]
-    static void LockToggle()
+    static void RefreshLock()
     {
-        if (selectedWindow == null)
+        if (ActiveEditorTracker.sharedTracker.isLocked)
         {
-            if (!EditorPrefs.HasKey("LockableInspectorIndex"))
-                EditorPrefs.SetInt("LockableInspectorIndex", 0);
-            int i = EditorPrefs.GetInt("LockableInspectorIndex");
+            ActiveEditorTracker.sharedTracker.isLocked = !ActiveEditorTracker.sharedTracker.isLocked;
+            ActiveEditorTracker.sharedTracker.ForceRebuild();
 
-            Type type = Assembly.GetAssembly(typeof(Editor)).GetType("UnityEditor.InspectorWindow");
-            Object[] findObjectsOfTypeAll = Resources.FindObjectsOfTypeAll(type);
-            selectedWindow = (EditorWindow)findObjectsOfTypeAll[i];
-        }
-
-        if (selectedWindow != null && selectedWindow.GetType().Name == "InspectorWindow")
-        {
-            Type type = Assembly.GetAssembly(typeof(Editor)).GetType("UnityEditor.InspectorWindow");
-            PropertyInfo propertyInfo = type.GetProperty("isLocked");
-            bool value = (bool)propertyInfo.GetValue(selectedWindow, null);
-            propertyInfo.SetValue(selectedWindow, !value, null);
-            selectedWindow.Repaint();
+            ActiveEditorTracker.sharedTracker.isLocked = !ActiveEditorTracker.sharedTracker.isLocked;
+            ActiveEditorTracker.sharedTracker.ForceRebuild();
         }
     }
 }
